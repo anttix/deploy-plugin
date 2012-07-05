@@ -80,16 +80,26 @@ public abstract class CargoContainerAdapter extends ContainerAdapter implements 
                     listener.error(Messages.DeployPublisher_NoSuchFile(f));
                     return true;
                 }
-                ClassLoader cl = getClass().getClassLoader();
-                final ConfigurationFactory configFactory = new DefaultConfigurationFactory(cl);
-                final ContainerFactory containerFactory = new DefaultContainerFactory(cl);
-                final DeployerFactory deployerFactory = new DefaultDeployerFactory(cl);
+                ClassLoader cl = getClassLoader();
+                ClassLoader parent = Thread.currentThread().getContextClassLoader();
+                try {
+                    Thread.currentThread().setContextClassLoader(cl);
+                    final ConfigurationFactory configFactory = new DefaultConfigurationFactory(cl);
+                    final ContainerFactory containerFactory = new DefaultContainerFactory(cl);
+                    final DeployerFactory deployerFactory = new DefaultDeployerFactory(cl);
 
-                Container container = getContainer(configFactory, containerFactory, getContainerId());
+                    Container container = getContainer(configFactory, containerFactory, getContainerId());
                 
-                deploy(deployerFactory, listener, container, f, contextPath);
-                return true;
+                    deploy(deployerFactory, listener, container, f, contextPath);
+                    return true;
+                } finally {
+                    Thread.currentThread().setContextClassLoader(parent);
+                }
             }
         });
+    }
+
+    protected ClassLoader getClassLoader() {
+        return getClass().getClassLoader();
     }
 }
