@@ -95,7 +95,7 @@
   </repositories>
 
   <properties>
-    <cargo.version>1.0.6</cargo.version>
+    <cargo.version>1.2.2</cargo.version>
   </properties>
 
     <pluginRepositories>
