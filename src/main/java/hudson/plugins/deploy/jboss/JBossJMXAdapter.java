@@ -4,7 +4,9 @@ import hudson.plugins.deploy.ContainerFirstClassLoader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for 5.x and later JBoss adapters.
@@ -14,7 +16,7 @@ import java.util.List;
 public abstract class JBossJMXAdapter extends JBossAdapter {
     public final String home;
 
-    transient private ClassLoader cl;
+    transient private static Map<String, ClassLoader> classLoaders = new HashMap();
 
     protected JBossJMXAdapter(String url, String password, String userName, String home) {
         super(url, password, userName);
@@ -23,13 +25,14 @@ public abstract class JBossJMXAdapter extends JBossAdapter {
 
     @Override
     protected ClassLoader getClassLoader() {
-        if(cl != null)
-            return cl;
-
         final ClassLoader parent = super.getClassLoader();
 
         if(home == null)
             return parent;
+
+        ClassLoader cl = classLoaders.get(home);
+        if(cl != null)
+            return cl;
 
         File jbossHome = new File(home);
         if(!jbossHome.isDirectory())
@@ -40,6 +43,7 @@ public abstract class JBossJMXAdapter extends JBossAdapter {
             libDirs.add(new File(jbossHome, dir));
 
         cl = new ContainerFirstClassLoader(libDirs, parent);
+        classLoaders.put(home, cl);
 
         return cl;
     }
